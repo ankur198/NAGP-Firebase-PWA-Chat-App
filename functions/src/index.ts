@@ -36,6 +36,11 @@ export const onUserCreate = functions.auth.user().onCreate(async (user)=>{
   });
 });
 
+export const addDeviceToFCM = functions.https.onCall(async (data: {token: string})=>{
+  const messaging = admin.messaging();
+  await messaging.subscribeToTopic(data.token, "allDevices");
+});
+
 export const addMessage = functions.https.onCall(async (data:{message: string}, context) => {
   if (context.auth !== null) {
     const userDocRef = firestore().doc(`users/${context.auth?.uid}`) as admin.firestore.DocumentReference<types.User>;
@@ -48,7 +53,15 @@ export const addMessage = functions.https.onCall(async (data:{message: string}, 
       timestamp: firestore.FieldValue.serverTimestamp(),
     };
     const newMessageDoc = await firestore().collection("messages").add(message) as admin.firestore.DocumentReference<types.Message>;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const newMessageData = await (await newMessageDoc.get()).data()!;
+
+    await admin.messaging().sendToTopic("allDevices", {
+      data: {
+        title: `New Message from ${newMessageData.from.name}`,
+        body: newMessageData.content,
+      },
+    });
 
     const recentMessagesRef = firestore().doc("messages/recent") as admin.firestore.DocumentReference<types.RecentMessages>;
     if ((await recentMessagesRef.get()).exists) {

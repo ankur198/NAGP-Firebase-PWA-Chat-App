@@ -28,7 +28,8 @@ import './firebase.ts'
   display: flex;
   flex-direction: column;
   margin: 0 auto;
-  width: 600px;
+  max-width: 600px;
+  width: 100%;
   border: solid black 1px;
   padding: 20px;
 }

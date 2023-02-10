@@ -1,6 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getFunctions, httpsCallable } from "firebase/functions";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -20,3 +22,18 @@ export const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+
+const messaging = getMessaging(app)
+const addDeviceToFCM = httpsCallable(getFunctions(), 'addDeviceToFCM')
+const registerUser = async () => {
+  const token = await getToken(messaging, { vapidKey: "BOoGH3AiIxgRs_mDB9zXKOkcMCT0gFbdEtzXxbZsqMipfYrN5cmD5LIhEqeqWmt_uCTgVja-TsjQ0gjTTXiyVOc"  })
+  console.log(token)
+  await addDeviceToFCM({token})
+  console.log('added to fcm')
+}
+
+registerUser()
+
+onMessage(messaging, message=> {
+  console.log(message.notification)
+})

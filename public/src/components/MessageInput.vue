@@ -12,13 +12,16 @@
 <script setup lang="ts">
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth'
 import { httpsCallable, getFunctions } from 'firebase/functions'
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 const inputField = ref<HTMLInputElement>()
 const user = ref<User>()
 const message = ref<string>()
 const isDisabled = ref(false)
 onAuthStateChanged(getAuth(), observer => user.value = observer ?? undefined)
 const addMessage = httpsCallable(getFunctions(), 'addMessage')
+const route = useRoute()
+const router = useRouter()
 
 const onSubmit = async () => {
     if (isDisabled.value) {
@@ -39,6 +42,14 @@ const onSubmit = async () => {
     isDisabled.value = false
     inputField.value?.focus()
 }
+
+watch([route.path, user], () => {
+    if (user !== undefined && route.path === '/hello') {
+        message.value = 'hello'
+        onSubmit()
+        router.replace('/')
+    }
+})
 </script>
 <style scoped lang="scss">
 form {
